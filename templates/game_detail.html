@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ game.title }} - Oyun Detayı</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/game.png') }}">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Sayfa fade animasyonları */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+        
+        body {
+            background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+            min-height: 100vh;
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        /* Header için özel glass efekti */
+        .header-glass {
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .similar-game-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .similar-game-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+            background-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .score-badge:hover {
+            transform: scale(1.1);
+        }
+
+        .score-excellent {
+            background: rgba(34, 197, 94, 0.2);
+            color: rgb(134, 239, 172);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .score-good {
+            background: rgba(234, 179, 8, 0.2);
+            color: rgb(253, 224, 71);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .score-average {
+            background: rgba(249, 115, 22, 0.2);
+            color: rgb(253, 186, 116);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+
+        .score-poor {
+            background: rgba(239, 68, 68, 0.2);
+            color: rgb(252, 165, 165);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .detail-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .detail-section:hover {
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        /* Geri dön butonu için */
+        .back-button {
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateX(-8px) !important;
+        }
+
+        /* Animasyon gecikmesi için */
+        .delay-1 { animation-delay: 0.2s; }
+        .delay-2 { animation-delay: 0.4s; }
+        .delay-3 { animation-delay: 0.6s; }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Navbar -->
+    <nav class="header-glass sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="font-bold text-xl">Top 100 Popüler Oyun</a>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="/" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="home">Ana Sayfa</a>
+                    <a href="/games" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="games">Oyunlar</a>
+                    <a href="/publishers" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="publishers">Yayıncılar</a>
+                    <a href="/stats" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="stats">İstatistikler</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-12">
+        <!-- Back Button -->
+        <a href="#" onclick="goToHome()" class="back-button inline-flex items-center text-gray-300 hover:text-white mb-8 transition-all">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Geri Dön
+        </a>
+
+        <!-- Game Details -->
+        <div class="glass-effect rounded-lg p-8" style="animation: fadeIn 0.8s ease-out forwards">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-4xl font-bold text-white">{{ game.title }}</h1>
+                    <p class="mt-2 text-xl text-gray-300">{{ game.publisher_name }}</p>
+                </div>
+                <span class="score-badge text-lg" data-score="{{ game.metascore }}">
+                    {{ game.metascore }}
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                <!-- Basic Info -->
+                <div class="detail-section rounded-lg p-6 delay-1">
+                    <h2 class="text-xl font-semibold mb-4">Temel Bilgiler</h2>
+                    <div class="space-y-3">
+                        <p class="flex justify-between">
+                            <span class="text-gray-400">Çıkış Yılı:</span>
+                            <span>{{ game.release_year }}</span>
+                        </p>
+                        <p class="flex justify-between">
+                            <span class="text-gray-400">Platformlar:</span>
+                            <span>{{ game.platforms|join(', ') }}</span>
+                        </p>
+                        <p class="flex justify-between">
+                            <span class="text-gray-400">Türler:</span>
+                            <span>{{ game.genres|join(', ') }}</span>
+                        </p>
+                        <p class="flex justify-between">
+                            <span class="text-gray-400">Oyun Modları:</span>
+                            <span>{{ game.modes|join(', ') }}</span>
+                        </p>
+                        {% if game.sales %}
+                        <p class="flex justify-between">
+                            <span class="text-gray-400">Toplam Satış:</span>
+                            <span>{{ "%.1f"|format(game.sales) }}M</span>
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Additional Details -->
+                <div class="detail-section rounded-lg p-6 delay-2">
+                    <h2 class="text-xl font-semibold mb-4">Ek Bilgiler</h2>
+                    <div class="space-y-3">
+                        <p class="flex justify-between">
+                            <span class="text-gray-400">Ülke:</span>
+                            <span>{{ game.country }}</span>
+                        </p>
+                        <p class="flex justify-between">
+                            <span class="text-gray-400">Dil Desteği:</span>
+                            <span>{{ game.languages|default('Bilgi Yok') }}</span>
+                        </p>
+                        {% if game.age_rating %}
+                        <p class="flex justify-between">
+                            <span class="text-gray-400">Yaş Sınırı:</span>
+                            <span>{{ game.age_rating }}</span>
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Similar Games -->
+        {% if similar_games %}
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold mb-6">Benzer Oyunlar</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% for game in similar_games %}
+                <div class="similar-game-card rounded-lg p-6 delay-3">
+                    <h3 class="text-xl font-bold text-white">{{ game.title }}</h3>
+                    <div class="mt-2 flex items-center justify-between">
+                        <span class="text-gray-300">{{ game.publisher_name }}</span>
+                        <span class="score-badge" data-score="{{ game.metascore }}">
+                            {{ game.metascore }}
+                        </span>
+                    </div>
+                    <a href="/game/{{ game.game_id }}" 
+                       class="mt-4 inline-block text-blue-400 hover:text-blue-300 transition">
+                        Detayları Gör →
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="glass-effect mt-12">
+        <div class="max-w-7xl mx-auto py-12 px-4">
+            <p class="text-center text-gray-400">
+                &copy; 2025 CEB Tarafından. Tüm hakları saklıdır.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Ana sayfaya dön fonksiyonu
+        function goToHome() {
+            document.body.style.animation = 'fadeOut 0.5s ease-out forwards';
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 500);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Navbar active state
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                if (currentPath.includes(link.dataset.page)) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Set metascore badge colors
+            document.querySelectorAll('.score-badge').forEach(badge => {
+                const score = parseFloat(badge.dataset.score);
+                if (score >= 80) badge.classList.add('score-excellent');
+                else if (score >= 60) badge.classList.add('score-good');
+                else if (score >= 40) badge.classList.add('score-average');
+                else badge.classList.add('score-poor');
+            });
+
+            // Sayfa geçişlerinde fade-out (geri dön butonu hariç)
+            document.querySelectorAll('a:not([onclick])').forEach(link => {
+                if (link.href && link.href.includes(window.location.origin)) {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        document.body.style.animation = 'fadeOut 0.5s ease-out forwards';
+                        setTimeout(() => {
+                            window.location = this.href;
+                        }, 500);
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top 100 Popüler Oyun</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/game.png') }}">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Temel stiller */
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Sayfa fade animasyonları */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        /* Sayfa yüklenme animasyonu */
+        body {
+            background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+            min-height: 100vh;
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        /* Elementler için staggered fade-in */
+        .fade-in-element {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease-out;
+        }
+
+        .fade-in-element.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Cam efekti */
+        .header-glass {
+            background: rgba(2, 6, 23, 0.85); /* Daha koyu ve opak arka plan */
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        /* İçerik için normal glass efekti */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        /* Kartlar için özel cam efekti */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .glass-card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* İstatistik kartları */
+        .stats-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        /* Staggered delay için class'lar */
+        .delay-1 { animation-delay: 0.2s; }
+        .delay-2 { animation-delay: 0.4s; }
+        .delay-3 { animation-delay: 0.6s; }
+        .delay-4 { animation-delay: 0.8s; }
+
+        /* Arama butonu stilleri */
+        .search-button {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .search-button:hover {
+            background: rgba(15, 23, 42, 0.8);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Form elemanları için özel stiller */
+        select option {
+            background-color: #0f172a;
+            color: #e5e7eb;
+        }
+        
+        select option:checked {
+            background-color: #1e293b;
+        }
+
+        /* Input ve select ortak stilleri */
+        select, input[type="text"] {
+            background-color: rgba(15, 23, 42, 0.6) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            transition: all 0.3s ease;
+        }
+
+        select:hover, select:focus,
+        input[type="text"]:hover, input[type="text"]:focus {
+            background-color: rgba(15, 23, 42, 0.8) !important;
+            border-color: rgba(255, 255, 255, 0.2) !important;
+            outline: none !important;
+            transform: translateY(-2px);
+        }
+
+        /* Puan rozetleri */
+        .score-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .score-badge:hover {
+            transform: scale(1.1);
+        }
+
+        .score-excellent {
+            background: rgba(34, 197, 94, 0.2);
+            color: rgb(134, 239, 172);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .score-good {
+            background: rgba(234, 179, 8, 0.2);
+            color: rgb(253, 224, 71);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .score-average {
+            background: rgba(249, 115, 22, 0.2);
+            color: rgb(253, 186, 116);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+
+        .score-poor {
+            background: rgba(239, 68, 68, 0.2);
+            color: rgb(252, 165, 165);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+            background-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Link hover animasyonları */
+        a {
+            transition: all 0.3s ease;
+        }
+
+        a:hover {
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Ana Menü - İyileştirilmiş Glass Efekti -->
+    <nav class="header-glass sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo ve başlık -->
+                <div class="flex items-center">
+                    <a href="/" class="font-bold text-xl">Top 100 Popüler Oyun</a>
+                </div>
+                <!-- Navigasyon linkleri -->
+                <div class="flex space-x-4">
+                    <a href="/" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="home">Ana Sayfa</a>
+                    <a href="/games" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="games">Oyunlar</a>
+                    <a href="/publishers" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="publishers">Yayıncılar</a>
+                    <a href="/stats" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="stats">İstatistikler</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Bölümü -->
+    <div class="glass-effect mt-8 fade-in-element">
+        <div class="max-w-7xl mx-auto py-12 px-4">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold text-white">
+                    2000'den Günümüze En İyi Oyunlar
+                </h1>
+                <p class="mt-4 text-xl text-gray-300">
+                    En popüler 100 oyunu keşfedin ve detaylı bilgilere ulaşın
+                </p>
+            </div>
+
+            <!-- Arama Bölümü -->
+            <div class="mt-10 fade-in-element">
+                <div class="glass-effect rounded-lg p-6">
+                    <div class="flex gap-4">
+                        <input type="text" 
+                               id="searchInput"
+                               placeholder="Oyun ara..." 
+                               class="flex-1 rounded-md px-4 py-2 text-white">
+                        <button id="searchButton"
+                                class="search-button rounded-md px-6 py-2 text-gray-200">
+                            Ara
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hızlı İstatistikler -->
+            <div class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="stats-card rounded-lg p-6 delay-1">
+                    <div class="text-2xl font-bold text-blue-400">{{ stats.game_count }}</div>
+                    <div class="mt-2 text-sm text-gray-300">Toplam Oyun</div>
+                </div>
+                <div class="stats-card rounded-lg p-6 delay-2">
+                    <div class="text-2xl font-bold text-purple-400">{{ stats.max_metascore }}</div>
+                    <div class="mt-2 text-sm text-gray-300">En Yüksek Metascore</div>
+                </div>
+                <div class="stats-card rounded-lg p-6 delay-3">
+                    <div class="text-2xl font-bold text-green-400">{{ stats.platform_count }}</div>
+                    <div class="mt-2 text-sm text-gray-300">Platform</div>
+                </div>
+                <div class="stats-card rounded-lg p-6 delay-4">
+                    <div class="text-2xl font-bold text-pink-400">{{ stats.genre_count }}</div>
+                    <div class="mt-2 text-sm text-gray-300">Farklı Tür</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Oyunlar Bölümü -->
+    <div class="py-12 fade-in-element">
+        <div class="max-w-7xl mx-auto px-4">
+            <!-- Filtreler ve Sıralama -->
+            <div class="mb-8 flex items-center justify-between">
+                <h2 class="text-3xl font-bold text-white">Tüm Oyunlar</h2>
+                <div class="flex gap-4">
+                    <select id="yearFilter" class="rounded-md px-4 py-2 text-white">
+                        <option value="">Tüm Yıllar</option>
+                        {% for year in range(2024, 1999, -1) %}
+                        <option value="{{ year }}">{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                    <select id="sortBy" class="rounded-md px-4 py-2 text-white">
+                        <option value="metascore">Metascore'a Göre</option>
+                        <option value="title">İsme Göre</option>
+                        <option value="year">Yıla Göre</option>
+                        <option value="sales">Satışa Göre</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Oyun Kartları -->
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" id="gamesGrid">
+                {% for game in all_games %}
+                <div class="game-card glass-card rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-white">{{ game.title }}</h3>
+                    <div class="mt-2 flex items-center justify-between">
+                        <span class="text-gray-300">{{ game.publisher_name }}</span>
+                        <span class="score-badge" data-score="{{ game.metascore }}">
+                            {{ game.metascore }}
+                        </span>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-300">
+                        <p class="release-year">Çıkış Yılı: {{ game.release_year }}</p>
+                        <p>Platformlar: {{ game.platforms|join(', ') }}</p>
+                        <p>Türler: {{ game.genres|join(', ') }}</p>
+                        <p>Ülke: {{ game.country }}</p>
+                        {% if game.sales %}
+                        <p class="sales-data">Satış: {{ "%.1f"|format(game.sales) }}M</p>
+                        {% endif %}
+                    </div>
+                    <a href="/game/{{ game.game_id }}" 
+                       class="mt-4 inline-block text-blue-400 hover:text-blue-300 transition">
+                        Detayları Gör →
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Alt Bilgi -->
+    <footer class="glass-effect mt-12">
+        <div class="max-w-7xl mx-auto py-12 px-4">
+            <p class="text-center text-gray-400">
+                &copy; 2025 CEB Tarafından. Tüm hakları saklıdır.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fade-in elementlerini görünür yap
+            function showFadeInElements() {
+                const elements = document.querySelectorAll('.fade-in-element');
+                elements.forEach((element, index) => {
+                    setTimeout(() => {
+                        element.classList.add('visible');
+                    }, 200 * index);
+                });
+            }
+
+            // Sayfa yüklendiğinde fade-in elementlerini göster
+            showFadeInElements();
+
+            // Kart animasyonlarını başlat
+            const cards = document.querySelectorAll('.glass-card');
+            
+            function showCards() {
+                cards.forEach((card, index) => {
+                    setTimeout(() => {
+                        card.classList.add('show');
+                    }, 100 * index);
+                });
+            }
+
+            // Kartları görünür yap
+            showCards();
+
+            // Intersection Observer ile viewport'a giren kartları animate et
+            const cardObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('show');
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '50px'
+            });
+
+            cards.forEach(card => {
+                cardObserver.observe(card);
+            });
+
+            // Sayfa geçişlerinde fade-out
+            document.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (this.href.includes(window.location.origin)) {
+                        e.preventDefault();
+                        document.body.style.animation = 'fadeOut 0.5s ease-out forwards';
+                        setTimeout(() => {
+                            window.location = this.href;
+                        }, 500);
+                    }
+                });
+            });
+
+            // Navbar için aktif sayfa kontrolü
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            navLinks.forEach(link => {
+                if (currentPath === '/' && link.dataset.page === 'home') {
+                    link.classList.add('active');
+                } else if (currentPath.includes(link.dataset.page)) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Arama ve filtreleme işlevleri
+            const searchInput = document.getElementById('searchInput');
+            const searchButton = document.getElementById('searchButton');
+            const yearFilter = document.getElementById('yearFilter');
+            const sortBy = document.getElementById('sortBy');
+            const gamesGrid = document.getElementById('gamesGrid');
+            const gameCards = Array.from(document.querySelectorAll('.game-card'));
+
+            // Arama işlevi
+            function performSearch() {
+                const searchTerm = searchInput.value.toLowerCase();
+                
+                gameCards.forEach(card => {
+                    const title = card.querySelector('h3').textContent.toLowerCase();
+                    const publisher = card.querySelector('.text-gray-300').textContent.toLowerCase();
+                    
+                    if (title.includes(searchTerm) || publisher.includes(searchTerm)) {
+                        card.style.display = 'block';
+                        // Görünür olan kartlara animasyon ekle
+                        setTimeout(() => {
+                            card.classList.add('show');
+                        }, 100);
+                    } else {
+                        card.style.display = 'none';
+                        card.classList.remove('show');
+                    }
+                });
+            }
+
+            // Filtreleme ve sıralama işlevi
+            function filterAndSortGames() {
+                let filtered = [...gameCards];
+                const selectedYear = yearFilter.value;
+                const selectedSort = sortBy.value;
+
+                // Yıla göre filtreleme
+                if (selectedYear) {
+                    filtered = filtered.filter(card => {
+                        const yearText = card.querySelector('.release-year').textContent;
+                        return yearText.includes(selectedYear);
+                    });
+                }
+
+                // Sıralama işlemleri
+                filtered.sort((a, b) => {
+                    if (selectedSort === 'metascore') {
+                        const scoreA = parseFloat(a.querySelector('.score-badge').textContent);
+                        const scoreB = parseFloat(b.querySelector('.score-badge').textContent);
+                        return scoreB - scoreA;
+                    } else if (selectedSort === 'title') {
+                        const titleA = a.querySelector('h3').textContent;
+                        const titleB = b.querySelector('h3').textContent;
+                        return titleA.localeCompare(titleB);
+                    } else if (selectedSort === 'year') {
+                        const yearA = parseInt(a.querySelector('.release-year').textContent.match(/\d{4}/)[0]);
+                        const yearB = parseInt(b.querySelector('.release-year').textContent.match(/\d{4}/)[0]);
+                        return yearB - yearA;
+                    } else if (selectedSort === 'sales') {
+                        const getSales = card => {
+                            const salesEl = card.querySelector('.sales-data');
+                            if (!salesEl) return 0;
+                            return parseFloat(salesEl.textContent.match(/[\d.]+/)[0]);
+                        };
+                        return getSales(b) - getSales(a);
+                    }
+                });
+
+                // Grid'i temizle ve filtrelenmiş kartları ekle
+                gamesGrid.innerHTML = '';
+                filtered.forEach((card, index) => {
+                    if (card.style.display !== 'none') {
+                        // Kartları sırayla ekleyip animasyonları başlat
+                        card.classList.remove('show');
+                        gamesGrid.appendChild(card);
+                        setTimeout(() => {
+                            card.classList.add('show');
+                        }, 50 * index);
+                    }
+                });
+            }
+
+            // Event listener'ları ekle
+            searchInput.addEventListener('input', performSearch);
+            searchButton.addEventListener('click', performSearch);
+            yearFilter.addEventListener('change', filterAndSortGames);
+            sortBy.addEventListener('change', filterAndSortGames);
+
+            // Enter tuşu için arama
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+
+            // Metascore rozetlerinin renklendirilmesi
+            const scoreColors = {
+                excellent: { min: 80, color: 'score-excellent' },
+                good: { min: 60, color: 'score-good' },
+                average: { min: 40, color: 'score-average' },
+                poor: { min: 0, color: 'score-poor' }
+            };
+
+            document.querySelectorAll('.score-badge').forEach(badge => {
+                const score = parseFloat(badge.dataset.score);
+                
+                for (const [key, value] of Object.entries(scoreColors)) {
+                    if (score >= value.min) {
+                        badge.classList.add(value.color);
+                        break;
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

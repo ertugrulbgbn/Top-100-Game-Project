@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oyunlar - Top 100 Popüler Oyun</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/game.png') }}">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Sayfa fade animasyonları */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+        
+        body {
+            background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+            min-height: 100vh;
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        /* Header için özel glass efekti */
+        .header-glass {
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        /* Elementler için fade-in */
+        .fade-in-element {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease-out;
+        }
+
+        .fade-in-element.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Normal glass efekti diğer elementler için */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .game-card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* Filtre animasyonları */
+        .filter-item {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+
+        select, input[type="text"] {
+            background-color: rgba(30, 41, 59, 0.8) !important;
+            border-color: rgba(255, 255, 255, 0.2) !important;
+            color: #e5e7eb !important;
+            transition: all 0.3s ease;
+        }
+
+        select:hover, select:focus,
+        input[type="text"]:hover, input[type="text"]:focus {
+            background-color: rgba(51, 65, 85, 0.9) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+            outline: none !important;
+            transform: translateY(-2px);
+        }
+
+        /* Buton animasyonu */
+        #applyFilters {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #applyFilters:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        #applyFilters::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            height: 300%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.5s;
+        }
+
+        #applyFilters:hover::after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        select option {
+            background-color: #334155;
+            color: #e5e7eb;
+        }
+
+        .score-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .score-badge:hover {
+            transform: scale(1.1);
+        }
+
+        .score-excellent {
+            background: rgba(34, 197, 94, 0.2);
+            color: rgb(134, 239, 172);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .score-good {
+            background: rgba(234, 179, 8, 0.2);
+            color: rgb(253, 224, 71);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .score-average {
+            background: rgba(249, 115, 22, 0.2);
+            color: rgb(253, 186, 116);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+
+        .score-poor {
+            background: rgba(239, 68, 68, 0.2);
+            color: rgb(252, 165, 165);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+            background-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Link hover animasyonları */
+        a {
+            transition: all 0.3s ease;
+        }
+
+        a:hover {
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Navbar - İyileştirilmiş glass efekti -->
+    <nav class="header-glass sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="font-bold text-xl">Top 100 Popüler Oyun</a>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="/" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="home">Ana Sayfa</a>
+                    <a href="/games" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="games">Oyunlar</a>
+                    <a href="/publishers" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="publishers">Yayıncılar</a>
+                    <a href="/stats" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="stats">İstatistikler</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="glass-effect mt-8 fade-in-element">
+        <div class="max-w-7xl mx-auto py-12 px-4">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold text-white">Tüm Oyunlar</h1>
+                <p class="mt-4 text-xl text-gray-300">
+                    Oyunları filtreleyebilir ve detaylı bilgilere ulaşabilirsiniz
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="glass-effect mt-8 fade-in-element">
+        <div class="max-w-7xl mx-auto py-8 px-4">
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <!-- Platform Filter -->
+                <div class="filter-item delay-1">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Platform</label>
+                    <select id="platformFilter" class="w-full rounded-md px-4 py-2">
+                        <option value="">Tüm Platformlar</option>
+                        {% for platform in platforms %}
+                        <option value="{{ platform.platform_id }}">{{ platform.platform_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Genre Filter -->
+                <div class="filter-item delay-2">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Tür</label>
+                    <select id="genreFilter" class="w-full rounded-md px-4 py-2">
+                        <option value="">Tüm Türler</option>
+                        {% for genre in genres %}
+                        <option value="{{ genre.genre_id }}">{{ genre.genre_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Year Filter -->
+                <div class="filter-item delay-3">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Yıl</label>
+                    <select id="yearFilter" class="w-full rounded-md px-4 py-2">
+                        <option value="">Tüm Yıllar</option>
+                        {% for year in range(2024, 1999, -1) %}
+                        <option value="{{ year }}">{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Sort By -->
+                <div class="filter-item delay-4">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Sıralama</label>
+                    <select id="sortBy" class="w-full rounded-md px-4 py-2">
+                        <option value="metascore">Metascore'a Göre</option>
+                        <option value="title">İsme Göre</option>
+                        <option value="year">Yıla Göre</option>
+                        <option value="publisher">Yayıncıya Göre</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Apply Filters Button -->
+            <div class="mt-6 flex justify-end">
+                <button id="applyFilters" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                    Filtreleri Uygula
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Games Grid -->
+    <div class="py-12 fade-in-element">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {% for game in games %}
+                <div class="game-card rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-white">{{ game.title }}</h3>
+                    <div class="mt-2 flex items-center justify-between">
+                        <span class="text-gray-300">{{ game.publisher_name }}</span>
+                        <span class="score-badge" data-score="{{ game.metascore }}">
+                            {{ game.metascore }}
+                        </span>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-300">
+                        <p>Çıkış Yılı: {{ game.release_year }}</p>
+                        <p>Platformlar: {{ game.platforms|join(', ') }}</p>
+                        <p>Türler: {{ game.genres|join(', ') }}</p>
+                        {% if game.sales %}
+                        <p>Satış: {{ "%.1f"|format(game.sales) }}M</p>
+                        {% endif %}
+                    </div>
+                    <a href="/game/{{ game.game_id }}" 
+                       class="mt-4 inline-block text-blue-400 hover:text-blue-300 transition">
+                        Detayları Gör →
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="glass-effect mt-12">
+        <div class="max-w-7xl mx-auto py-12 px-4">
+            <p class="text-center text-gray-400">
+                &copy; 2025 CEB Tarafından. Tüm hakları saklıdır.
+            </p>
+        </div>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fade-in elementlerini görünür yap
+            function showFadeInElements() {
+                const elements = document.querySelectorAll('.fade-in-element');
+                elements.forEach((element, index) => {
+                    setTimeout(() => {
+                        element.classList.add('visible');
+                    }, 200 * index);
+                });
+            }
+
+            // Sayfa yüklendiğinde fade-in elementlerini göster
+            showFadeInElements();
+
+            // Kart animasyonlarını başlat
+            const cards = document.querySelectorAll('.game-card');
+            
+            function showCards() {
+                cards.forEach((card, index) => {
+                    setTimeout(() => {
+                        card.classList.add('show');
+                    }, 100 * index);
+                });
+            }
+
+            // Kartları görünür yap
+            showCards();
+
+            // Intersection Observer ile viewport'a giren kartları animate et
+            const cardObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('show');
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '50px'
+            });
+
+            cards.forEach(card => {
+                cardObserver.observe(card);
+            });
+
+            // Sayfa geçişlerinde fade-out
+            document.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (this.href.includes(window.location.origin)) {
+                        e.preventDefault();
+                        document.body.style.animation = 'fadeOut 0.5s ease-out forwards';
+                        setTimeout(() => {
+                            window.location = this.href;
+                        }, 500);
+                    }
+                });
+            });
+
+            // Navbar active state
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                if (currentPath.includes(link.dataset.page)) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Filter functionality
+            const platformFilter = document.getElementById('platformFilter');
+            const genreFilter = document.getElementById('genreFilter');
+            const yearFilter = document.getElementById('yearFilter');
+            const sortBy = document.getElementById('sortBy');
+            const applyButton = document.getElementById('applyFilters');
+
+            // Filtre butonu için ripple efekti
+            applyButton.addEventListener('mouseenter', function(e) {
+                this.style.transform = 'translateY(-2px)';
+            });
+
+            applyButton.addEventListener('mouseleave', function(e) {
+                this.style.transform = 'translateY(0)';
+            });
+
+            function applyFilters() {
+                const platform = platformFilter.value;
+                const genre = genreFilter.value;
+                const year = yearFilter.value;
+                const sort = sortBy.value;
+
+                // Filtre uygulanırken smooth fade-out
+                document.querySelectorAll('.game-card').forEach(card => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                });
+
+                setTimeout(() => {
+                    let url = '/games?';
+                    if (platform) url += `platform=${platform}&`;
+                    if (genre) url += `genre=${genre}&`;
+                    if (year) url += `year=${year}&`;
+                    if (sort) url += `sort=${sort}&`;
+
+                    window.location.href = url.slice(0, -1);
+                }, 300);
+            }
+
+            applyButton.addEventListener('click', applyFilters);
+
+            // Metascore badge colors ve animasyonlar
+            document.querySelectorAll('.score-badge').forEach(badge => {
+                const score = parseFloat(badge.dataset.score);
+                if (score >= 80) {
+                    badge.classList.add('score-excellent');
+                    badge.style.animation = 'fadeIn 0.5s ease-out forwards';
+                }
+                else if (score >= 60) {
+                    badge.classList.add('score-good');
+                    badge.style.animation = 'fadeIn 0.6s ease-out forwards';
+                }
+                else if (score >= 40) {
+                    badge.classList.add('score-average');
+                    badge.style.animation = 'fadeIn 0.7s ease-out forwards';
+                }
+                else {
+                    badge.classList.add('score-poor');
+                    badge.style.animation = 'fadeIn 0.8s ease-out forwards';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

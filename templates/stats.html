@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İstatistikler - Top 100 Popüler Oyun</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/game.png') }}">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Sayfa fade animasyonları */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+        
+        body {
+            background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+            min-height: 100vh;
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        /* Header için özel glass efekti */
+        .header-glass {
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        /* Stats kartları için animasyonlar */
+        .stats-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .stats-card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* Başlıklar için animasyon */
+        .section-title {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        /* Navigasyon linkleri */
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+            background-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Staggered delay için class'lar */
+        .delay-1 { animation-delay: 0.2s; }
+        .delay-2 { animation-delay: 0.4s; }
+        .delay-3 { animation-delay: 0.6s; }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Navbar -->
+    <nav class="header-glass sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="font-bold text-xl">Top 100 Popüler Oyun</a>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="/" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="home">Ana Sayfa</a>
+                    <a href="/games" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="games">Oyunlar</a>
+                    <a href="/publishers" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="publishers">Yayıncılar</a>
+                    <a href="/stats" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition" data-page="stats">İstatistikler</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="glass-effect mt-8">
+        <div class="max-w-7xl mx-auto py-12 px-4">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold text-white section-title delay-1">Oyun İstatistikleri</h1>
+                <p class="mt-4 text-xl text-gray-300 section-title delay-2">
+                    Platform, tür ve yıllara göre detaylı oyun istatistikleri
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Sections -->
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto px-4">
+            <!-- Platform Stats -->
+            <div class="mb-12">
+                <h2 class="text-2xl font-bold mb-6 section-title">Platform İstatistikleri</h2>
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {% for stat in platform_stats %}
+                    <div class="stats-card rounded-lg p-6">
+                        <h3 class="text-xl font-bold text-white">{{ stat.platform_name }}</h3>
+                        <div class="mt-4 space-y-2 text-gray-300">
+                            <p class="flex justify-between">
+                                <span>Oyun Sayısı:</span>
+                                <span class="font-medium">{{ stat.game_count }}</span>
+                            </p>
+                            <p class="flex justify-between">
+                                <span>Ortalama Metascore:</span>
+                                <span class="font-medium">{{ "%.1f"|format(stat.avg_metascore|float) }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Genre Stats -->
+            <div class="mb-12">
+                <h2 class="text-2xl font-bold mb-6 section-title">Tür İstatistikleri</h2>
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {% for stat in genre_stats %}
+                    <div class="stats-card rounded-lg p-6">
+                        <h3 class="text-xl font-bold text-white">{{ stat.genre_name }}</h3>
+                        <div class="mt-4 space-y-2 text-gray-300">
+                            <p class="flex justify-between">
+                                <span>Oyun Sayısı:</span>
+                                <span class="font-medium">{{ stat.game_count }}</span>
+                            </p>
+                            <p class="flex justify-between">
+                                <span>Ortalama Metascore:</span>
+                                <span class="font-medium">{{ "%.1f"|format(stat.avg_metascore|float) }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Yearly Stats -->
+            <div>
+                <h2 class="text-2xl font-bold mb-6 section-title">Yıllara Göre İstatistikler</h2>
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {% for stat in yearly_stats %}
+                    <div class="stats-card rounded-lg p-6">
+                        <h3 class="text-xl font-bold text-white">{{ stat.release_year }}</h3>
+                        <div class="mt-4 space-y-2 text-gray-300">
+                            <p class="flex justify-between">
+                                <span>Oyun Sayısı:</span>
+                                <span class="font-medium">{{ stat.game_count }}</span>
+                            </p>
+                            <p class="flex justify-between">
+                                <span>Ortalama Metascore:</span>
+                                <span class="font-medium">{{ "%.1f"|format(stat.avg_metascore|float) }}</span>
+                            </p>
+                            {% if stat.total_sales %}
+                            <p class="flex justify-between">
+                                <span>Toplam Satış:</span>
+                                <span class="font-medium">{{ "%.1f"|format(stat.total_sales|float) }}M</span>
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="glass-effect mt-12">
+        <div class="max-w-7xl mx-auto py-12 px-4">
+            <p class="text-center text-gray-400">
+                &copy; 2025 CEB Tarafından. Tüm hakları saklıdır.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Navbar active state
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            navLinks.forEach(link => {
+                if (currentPath.includes(link.dataset.page)) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Stats kartları için animasyon
+            const cards = document.querySelectorAll('.stats-card');
+            
+            function showCards() {
+                cards.forEach((card, index) => {
+                    setTimeout(() => {
+                        card.classList.add('show');
+                    }, 100 * index);
+                });
+            }
+
+            // Kartları görünür yap
+            showCards();
+
+            // Intersection Observer ile viewport'a giren kartları animate et
+            const cardObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('show');
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '50px'
+            });
+
+            cards.forEach(card => {
+                cardObserver.observe(card);
+            });
+
+            // Sayfa geçişlerinde fade-out
+            document.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (this.href.includes(window.location.origin)) {
+                        e.preventDefault();
+                        document.body.style.animation = 'fadeOut 0.5s ease-out forwards';
+                        setTimeout(() => {
+                            window.location = this.href;
+                        }, 500);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
